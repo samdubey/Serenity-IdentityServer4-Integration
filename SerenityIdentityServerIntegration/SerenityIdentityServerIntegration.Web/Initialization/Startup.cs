@@ -19,6 +19,7 @@ using Serenity.Web.Middleware;
 using System.Data.SqlClient;
 using System.IO;
 using System;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 
 namespace SerenityIdentityServerIntegration
 {
@@ -52,9 +53,11 @@ namespace SerenityIdentityServerIntegration
 
             services.AddAuthentication(o =>
             {
-                o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                //o.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 o.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                o.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                o.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                o.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+
             }).AddCookie(o =>
             {
                 o.Cookie.Name = ".AspNetAuth";
@@ -62,6 +65,26 @@ namespace SerenityIdentityServerIntegration
                 o.AccessDeniedPath = new PathString("/Account/AccessDenied");
                 o.ExpireTimeSpan = TimeSpan.FromMinutes(30);
                 o.SlidingExpiration = true;
+            })
+            .AddOpenIdConnect(options =>
+            {
+                options.Authority = "https://localhost:44310"; 
+                options.ClientId = "AuthWeb";
+                options.SaveTokens = true;
+                options.TokenValidationParameters.NameClaimType = "name";
+            }).AddOpenIdConnect("oidc", options =>
+            {
+                options.Authority = "https://localhost:44310";
+                options.RequireHttpsMetadata = false;
+
+                options.ClientId = "AuthApi";
+                options.ClientSecret = "secret";
+                options.ResponseType = "code";
+
+                options.SaveTokens = true;
+
+                options.Scope.Add("api");
+                options.Scope.Add("offline_access");
             });
 
             services.AddLogging(loggingBuilder =>

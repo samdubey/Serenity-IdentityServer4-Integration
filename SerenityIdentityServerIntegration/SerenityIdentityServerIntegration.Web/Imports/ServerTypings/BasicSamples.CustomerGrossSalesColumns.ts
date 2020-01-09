@@ -1,0 +1,3 @@
+﻿namespace SerenityIdentityServerIntegration.BasicSamples {
+}
+
